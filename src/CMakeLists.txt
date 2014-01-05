@@ -13,6 +13,7 @@ add_executable (jigsaw_solver
                 Chromosome.cpp
                 GeneticAlgorithm.cpp
                 Piece.cpp
+                SpatialRelation.cpp
                 )
 
 target_link_libraries (jigsaw_solver ${OpenCV_LIBS})

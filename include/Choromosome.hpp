@@ -5,6 +5,8 @@
 #include <vector>
 #include <opencv2/core/core.hpp>
 #include "Piece.hpp"
+#include "SpatialRelation.hpp"
+#include <queue>
 
 class Choromosome
 {
@@ -16,11 +18,15 @@ public:
     //D'tor
     virtual ~Choromosome();
 
-    void foundBounderies();
+    void getFreeBoundries(std::queue <SpatialRelation> & freeBounderiesPositions);
 
-    void assignPiece(int index);
+    void assignPiece(SpatialRelation currentBoundary, int neighbourId);
 
     void calculateFitness(const std::vector<Piece>& pieces);
+
+    int getNeighbour (SpatialRelation currentBoundary) const;
+
+    bool checkPieceAvailability (int pieceId) const;
 
     void checkImageBounderies();
 
@@ -30,6 +36,18 @@ public:
 
     double getFitness() const;
 
+    int getOccupiedPositions() const;
+
+    void shiftLeft();
+
+    void shiftRight();
+
+    void shiftUp();
+
+    void shiftDown();
+
+    std::vector <bool> availabalePieces;
+
 private:
 
     std::vector < std::vector <int> > piecesArrangment;
@@ -38,6 +56,7 @@ private:
 
     double fitness;
 
+    int occupiedPosition;
 };
 
 #endif /* CHOROMOSOME_HPP */
