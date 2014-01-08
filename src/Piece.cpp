@@ -71,10 +71,21 @@ double Piece::getDownDissimilarityValues(int inx) const
 
 void Piece::sortDissimilarityValues()
 {
-    std::sort (sortedRightDissimiliratyValues.begin(), sortedRightDissimiliratyValues.end());
-    std::sort (sortedDownDissimiliratyValues.begin(), sortedDownDissimiliratyValues.end());
-    std::sort (sortedLeftDissimiliratyValues.begin(), sortedLeftDissimiliratyValues.end());
-    std::sort (sortedUpDissimiliratyValues.begin(), sortedUpDissimiliratyValues.end());
+    std::sort (sortedRightDissimiliratyValues.begin(),
+               sortedRightDissimiliratyValues.end(),
+               [](const std::pair<int, int>& lhs, const std::pair<int, int>& rhs) { return lhs.second < rhs.second; } );
+
+    std::sort (sortedDownDissimiliratyValues.begin(),
+               sortedDownDissimiliratyValues.end(),
+               [](const std::pair<int, int>& lhs, const std::pair<int, int>& rhs) {return lhs.second < rhs.second; } );
+
+    std::sort (sortedLeftDissimiliratyValues.begin(),
+               sortedLeftDissimiliratyValues.end(),
+               [](const std::pair<int, int>& lhs, const std::pair<int, int>& rhs) {return lhs.second < rhs.second; } );
+
+    std::sort (sortedUpDissimiliratyValues.begin(),
+               sortedUpDissimiliratyValues.end(),
+               [](const std::pair<int, int>& lhs, const std::pair<int, int>& rhs) {return lhs.second < rhs.second; } );
 }
 
 void Piece::setBestBuddies()
@@ -88,16 +99,16 @@ void Piece::setBestBuddies()
 bool Piece::isBestBuddy (const Piece & neighbour, SpatialRelation::Direction direction) const
 {
     if(direction == SpatialRelation::Up)
-        return (this->bestBuddyUpId == neighbour.id);
+        return (this->bestBuddyUpId == neighbour.id && neighbour.bestBuddyDownId == this->id);
 
     if(direction == SpatialRelation::Left)
-        return (this->bestBuddyLeftId == neighbour.id);
+        return (this->bestBuddyLeftId == neighbour.id && neighbour.bestBuddyRightId == this->id);
 
     if(direction == SpatialRelation::Down)
-        return (this->bestBuddyDownId == neighbour.id);
+        return (this->bestBuddyDownId == neighbour.id && neighbour.bestBuddyUpId == this->id);
 
     if(direction == SpatialRelation::Right)
-        return (this->bestBuddyRightId == neighbour.id);
+        return (this->bestBuddyRightId == neighbour.id && neighbour.bestBuddyLeftId == this->id);
 }
 
 int Piece::getBestMatch(std::vector<bool> & pieceAvailability, SpatialRelation::Direction direction) const

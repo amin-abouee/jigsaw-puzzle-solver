@@ -10,6 +10,8 @@
 
 GeneticAlgorithm::GeneticAlgorithm(cv::Mat image, int size):image(image), patchSize(size,size)
 {
+    numPiecesRow = image.rows / size;
+    numPiecesCol = image.cols / size;
     numPieces = (image.rows / size) * (image.cols / size);
     totalFitness = 0;
     pieces.reserve(numPieces);
@@ -22,28 +24,34 @@ GeneticAlgorithm::~GeneticAlgorithm()
 
 void GeneticAlgorithm::generatePopulation(int numChoromosomes)
 {
-    int cols = image.cols / patchSize.width;
-    int rows = image.rows / patchSize.height;
     population.reserve(numChoromosomes);
+    std::vector <int> randVec (numPieces);
+    for(size_t j=0; j<numPieces; j++)
+        randVec[j]=j;
 
     for(size_t i=0; i<numChoromosomes; i++)
     {
-        Choromosome temp(cols, rows);
-        temp.generateChoromosome();
+        Choromosome temp(numPiecesCol, numPiecesRow);
+        temp.generateChoromosome(randVec);
         population.push_back(temp);
     }
 }
 
 void GeneticAlgorithm::generatePieces()
 {
-    int cols = image.cols / patchSize.width;
-    int rows = image.rows / patchSize.height;
-
-    for(size_t i=0; i< rows; i++)
-        for(size_t j=0; j<cols; j++)
+    for(size_t i=0; i< numPiecesRow; i++)
+        for(size_t j=0; j<numPiecesCol; j++)
         {
             cv::Mat patchImage = splitImage(i,j);
-            int id = i * rows + j;
+
+            assert(patchImage.rows == patchSize.height);
+            assert(patchImage.cols == patchSize.width);
+
+            //            cv::namedWindow("test",1);
+            //            cv::imshow("test",patchImage);
+            //            if(cv::waitKey(30) == 27)
+            //                break;
+            int id = i * numPiecesRow + j;
             pieces.push_back(Piece(id, patchImage));
         }
 }
@@ -64,6 +72,7 @@ void GeneticAlgorithm::initiatePieces()
 
 void GeneticAlgorithm::evaluateAllChoromosoms()
 {
+    // use inside the selection method
     totalFitness = 0;
     for(auto & choromosome : population)
     {
@@ -74,12 +83,16 @@ void GeneticAlgorithm::evaluateAllChoromosoms()
 
 const Choromosome & GeneticAlgorithm::selectionChromosome()
 {
-    std::default_random_engine generator;
-    std::uniform_int_distribution<double> distribution(0,totalFitness);
+    // roulette wheel selection
+    //    std::default_random_engine generator;
+    std::random_device rd;
+    std::mt19937 generator(rd());
+    std::uniform_real_distribution <double> distribution(0,totalFitness);
     double randomFitness = distribution(generator);
 
     double sum = 0;
-    for(auto & choromosome : population)
+    // check -> population sorted here ????
+    for(const auto & choromosome : population)
     {
         sum += choromosome.getFitness();
         if(sum >= randomFitness)
@@ -99,37 +112,37 @@ void GeneticAlgorithm::selectElitism(int numElitism)
 
 void GeneticAlgorithm::crossOver(const Choromosome &parent1, const Choromosome &parent2)
 {
-    std::default_random_engine generator;
+//    std::default_random_engine generator;
+    std::random_device rd;
+    std::mt19937 generator(rd());
     std::uniform_int_distribution<int> distribution(0,numPieces);
     int seedInx = distribution(generator);
 
-    int cols = image.cols / patchSize.width;
-    int rows = image.rows / patchSize.height;
-
-    Choromosome offSpring(cols, rows);
+    Choromosome offSpring(numPiecesCol, numPiecesRow);
     // TODO assignPiece for one sample;
-//    offSpring.assignPiece(14, 14, seedInx);
+    offSpring.assignPiece(numPiecesRow/2, numPiecesCol/2, seedInx);
 
     while(offSpring.getOccupiedPositions() < numPieces)
     {
+        std::vector <SpatialRelation> freeBounderiesPositions;
+
         offSpring.getFreeBoundries(freeBounderiesPositions);
-        while(!freeBounderiesPositions.empty())
-        {
-            SpatialRelation currentBoundary = freeBounderiesPositions.front();
-            freeBounderiesPositions.pop();
+        //
 
-            bool resultParent = setNeighbourByParents(offSpring, parent1, parent2, currentBoundary);
-            if(resultParent)
-                continue;
+        bool resultParent = setNeighbourByParents(offSpring, parent1, parent2, freeBounderiesPositions);
+        if(resultParent)
+            continue;
 
-            bool resultBesBuddy = setNeighbourByBestBuddy(offSpring, parent1, parent2, currentBoundary);
-            if(resultBesBuddy)
-                continue;
+        bool resultBesBuddy = setNeighbourByBestBuddy(offSpring, parent1, parent2, freeBounderiesPositions);
+        if(resultBesBuddy)
+            continue;
 
-            setNeighbourByBestMatch(offSpring, currentBoundary);
-        }
+        std::uniform_int_distribution<int> distribution1(0,freeBounderiesPositions.size());
+        int randomPieceId  = distribution1(generator);
 
+        setNeighbourByBestMatch(offSpring, freeBounderiesPositions[randomPieceId]);
     }
+    newPopulation.push_back(offSpring);
 }
 
 cv::Mat GeneticAlgorithm::splitImage(int rowPiece, int colPiece) const
@@ -139,52 +152,83 @@ cv::Mat GeneticAlgorithm::splitImage(int rowPiece, int colPiece) const
     return ROI;
 }
 
-bool GeneticAlgorithm::setNeighbourByParents(Choromosome & offSpring, const Choromosome & parent1, const Choromosome & parent2, const SpatialRelation & currentBoundary)
+int GeneticAlgorithm::findNeighbourByParents(const Choromosome & parent1, const Choromosome & parent2, const SpatialRelation & currentBoundary)
 {
     int neighbourParent1 = parent1.getNeighbour(currentBoundary);
     int neighbourParent2 = parent2.getNeighbour(currentBoundary);
 
     if(neighbourParent1 != -1 && neighbourParent2 != -1)
     {
-        if(offSpring.checkPieceAvailability(neighbourParent1) && offSpring.checkPieceAvailability(neighbourParent2))
+        if(neighbourParent1 == neighbourParent2)
         {
-            if(neighbourParent1 == neighbourParent2)
-            {
-                offSpring.assignPiece(currentBoundary, neighbourParent1);
-                return true;
-            }
+            return neighbourParent1;
         }
     }
 
+    return -1;
+}
+
+bool GeneticAlgorithm::setNeighbourByParents(Choromosome &offSpring,
+                                             const Choromosome &parent1,
+                                             const Choromosome &parent2,
+                                             const std::vector <SpatialRelation> & freeBounderiesPositions)
+{
+    for(size_t i=0; i<freeBounderiesPositions.size(); i++)
+    {
+        SpatialRelation currentBoundary = freeBounderiesPositions[i];
+        int pieceId = findNeighbourByParents(parent1, parent2, currentBoundary);
+        if (pieceId != -1 && offSpring.checkPieceAvailability(pieceId))
+        {
+            offSpring.assignPiece(currentBoundary, pieceId);
+            return true;
+        }
+    }
     return false;
 }
 
 
-bool GeneticAlgorithm::setNeighbourByBestBuddy(Choromosome &offSpring, const Choromosome &parent1, const Choromosome &parent2, const SpatialRelation &currentBoundary)
+int GeneticAlgorithm::findNeighbourByBestBuddy(const Choromosome &parent1,
+                                               const Choromosome &parent2,
+                                               const SpatialRelation &currentBoundary)
 {
     int neighbourParent1 = parent1.getNeighbour(currentBoundary);
     int neighbourParent2 = parent2.getNeighbour(currentBoundary);
 
     int currentPieceId = currentBoundary.pieceIndex;
 
-    // TDOD check availability and -1
-
     if (pieces[currentPieceId].isBestBuddy(pieces[neighbourParent1], currentBoundary.direction))
     {
-        offSpring.assignPiece(currentBoundary, neighbourParent1);
-        return true;
+        return neighbourParent1;
     }
 
     else if (pieces[currentPieceId].isBestBuddy(pieces[neighbourParent2], currentBoundary.direction))
     {
-        offSpring.assignPiece(currentBoundary, neighbourParent2);
-        return true;
+        return neighbourParent2;
     }
 
+    return -1;
+}
+
+bool GeneticAlgorithm::setNeighbourByBestBuddy(Choromosome &offSpring,
+                                               const Choromosome &parent1,
+                                               const Choromosome &parent2,
+                                               const std::vector<SpatialRelation> &freeBounderiesPositions)
+{
+    for(size_t i=0; i<freeBounderiesPositions.size(); i++)
+    {
+        SpatialRelation currentBoundary = freeBounderiesPositions[i];
+        int pieceId = findNeighbourByBestBuddy(parent1, parent2, currentBoundary);
+        if (pieceId != -1 && offSpring.checkPieceAvailability(pieceId))
+        {
+            offSpring.assignPiece(currentBoundary, pieceId);
+            return true;
+        }
+    }
     return false;
 }
 
-void GeneticAlgorithm::setNeighbourByBestMatch(Choromosome & offSpring, const SpatialRelation & currentBoundary)
+void GeneticAlgorithm::setNeighbourByBestMatch(Choromosome & offSpring,
+                                               const SpatialRelation &currentBoundary)
 {
     int neighbourId = pieces[currentBoundary.pieceIndex].getBestMatch(offSpring.availabalePieces, currentBoundary.direction);
     offSpring.assignPiece(currentBoundary, neighbourId);

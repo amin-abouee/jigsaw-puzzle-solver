@@ -34,11 +34,26 @@ public:
 
     void initiatePieces();
 
-    bool setNeighbourByParents(Choromosome & offSpring, const Choromosome & parent1, const Choromosome & parent2, const SpatialRelation & currentBoundary);
+    int findNeighbourByParents(const Choromosome & parent1,
+                               const Choromosome & parent2,
+                               const SpatialRelation & currentBoundary);
 
-    bool setNeighbourByBestBuddy(Choromosome & offSpring, const Choromosome & parent1, const Choromosome & parent2, const SpatialRelation & currentBoundary);
+    bool setNeighbourByParents (Choromosome & offSpring,
+                                const Choromosome & parent1,
+                                const Choromosome & parent2,
+                                const std::vector <SpatialRelation> & freeBounderiesPositions);
 
-    void setNeighbourByBestMatch (Choromosome & offSpring, const SpatialRelation & currentBoundary);
+    int findNeighbourByBestBuddy(const Choromosome & parent1,
+                                 const Choromosome & parent2,
+                                 const SpatialRelation & currentBoundary);
+
+    bool setNeighbourByBestBuddy(Choromosome & offSpring,
+                                 const Choromosome & parent1,
+                                 const Choromosome & parent2,
+                                 const std::vector <SpatialRelation> & freeBounderiesPositions);
+
+    void setNeighbourByBestMatch (Choromosome & offSpring,
+                                  const SpatialRelation &currentBoundary);
 
 
 private:
@@ -47,17 +62,20 @@ private:
 
     std::vector <Choromosome> newPopulation;
 
-    int numPieces;
-
-    double totalFitness;
-
     std::vector <Piece> pieces;
 
     cv::Mat image;
 
     cv::Size patchSize;
 
-    std::queue <SpatialRelation> freeBounderiesPositions;
+    int numPieces;
+
+    double totalFitness;
+
+    int numPiecesRow;
+
+    int numPiecesCol;
+
 };
 
 #endif /* GENETICALGORITHM_HPP */

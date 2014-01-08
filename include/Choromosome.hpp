@@ -18,9 +18,11 @@ public:
     //D'tor
     virtual ~Choromosome();
 
-    void getFreeBoundries(std::queue <SpatialRelation> & freeBounderiesPositions);
+    void getFreeBoundries(std::vector<SpatialRelation> &freeBounderiesPositions);
 
     void assignPiece(SpatialRelation currentBoundary, int neighbourId);
+
+    void assignPiece(int rowInx, int colInx, int seedInx);
 
     void calculateFitness(const std::vector<Piece>& pieces);
 
@@ -28,9 +30,9 @@ public:
 
     bool checkPieceAvailability (int pieceId) const;
 
-    void checkImageBounderies();
+    void checkImageBounderies(SpatialRelation currentBoundary);
 
-    void generateChoromosome();
+    void generateChoromosome(std::vector<int> &randVec);
 
     bool operator < (const Choromosome & rhs) const;
 
@@ -52,11 +54,19 @@ private:
 
     std::vector < std::vector <int> > piecesArrangment;
 
+//    std::vector <int> numPicesInRows;
+
+//    std::vector <int> numPicesInCols;
+
     cv::Size choroSize;
 
     double fitness;
 
     int occupiedPosition;
+
+    bool lockVerticallShift;
+
+    bool lockHorizontalShift;
 };
 
 #endif /* CHOROMOSOME_HPP */
