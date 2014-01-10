@@ -3,7 +3,7 @@
 
 #include <iostream>
 #include <opencv2/opencv.hpp>
-#include <queue>
+#include <random>
 #include "Choromosome.hpp"
 #include "Piece.hpp"
 #include "SpatialRelation.hpp"
@@ -33,6 +33,12 @@ public:
     void evaluateAllChoromosoms();
 
     void initiatePieces();
+
+    void copyNewPopulationToPopulation();
+
+    void printPopulation();
+
+    Choromosome getBestChromosome();
 
     int findNeighbourByParents(const Choromosome & parent1,
                                const Choromosome & parent2,
@@ -75,6 +81,10 @@ private:
     int numPiecesRow;
 
     int numPiecesCol;
+
+    std::random_device rd;
+
+    std::mt19937_64 generator;
 
 };
 

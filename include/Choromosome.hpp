@@ -14,6 +14,7 @@ public:
 
     //C'tor
     Choromosome(int width, int height);
+    Choromosome(int width, int height, std::vector <int> inTem);
 
     //D'tor
     virtual ~Choromosome();
@@ -30,11 +31,17 @@ public:
 
     bool checkPieceAvailability (int pieceId) const;
 
-    void checkImageBounderies(SpatialRelation currentBoundary);
+    void checkShifftingIsAllow ();
+
+    bool checkRowIsEmpty (int rowInx);
+
+    bool checkColIsEmpty (int colInx);
 
     void generateChoromosome(std::vector<int> &randVec);
 
     bool operator < (const Choromosome & rhs) const;
+
+    void setPiecesArrangment (int rowInx, int colInx, int neighbourId);
 
     double getFitness() const;
 
@@ -48,17 +55,19 @@ public:
 
     void shiftDown();
 
+    void printChoromosome() const;
+
     std::vector <bool> availabalePieces;
+
+    void checkChoro ();
 
 private:
 
     std::vector < std::vector <int> > piecesArrangment;
 
-//    std::vector <int> numPicesInRows;
+    int width;
 
-//    std::vector <int> numPicesInCols;
-
-    cv::Size choroSize;
+    int height;
 
     double fitness;
 
@@ -67,6 +76,7 @@ private:
     bool lockVerticallShift;
 
     bool lockHorizontalShift;
+
 };
 
 #endif /* CHOROMOSOME_HPP */
