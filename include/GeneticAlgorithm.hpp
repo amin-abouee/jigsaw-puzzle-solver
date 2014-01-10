@@ -24,6 +24,8 @@ public:
 
     void crossOver(const Choromosome & parent1, const Choromosome & parent2);
 
+    void mutation();
+
     cv::Mat splitImage(int rowPiece, int colPiece) const ;
 
     void generatePopulation(int numChoromosomes);

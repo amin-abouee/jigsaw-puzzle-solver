@@ -13,10 +13,11 @@ int main(int argc, char* argv[])
 
     GeneticAlgorithm GA(image, patchSize);
 
-    const int numPopulation = 1000;
+    // change
+    const int numPopulation = 100;
     const int numGeneration = 100;
     const int numElitism = 4;
-    const int numCrossOverOperation = 996;
+    const int numCrossOverOperation = numPopulation - numElitism;
 
     GA.generatePopulation(numPopulation);
 
@@ -26,29 +27,32 @@ int main(int argc, char* argv[])
 
     for(int i=0; i<numGeneration; i++)
     {
+        std::cout << "generation: " << i+1 << std::endl;
         GA.evaluateAllChoromosoms();
         GA.selectElitism(numElitism);
 
-        std::cout << "generation: " << i+1 << std::endl;
         for(int j=0; j<numCrossOverOperation; j++)
         {
-//            std::cout << "cross: " << j << std::endl;
+            std::cout << "cross: " << j << std::endl;
             const Choromosome & parent1 = GA.selectionChromosome();
             const Choromosome & parent2 = GA.selectionChromosome();
 
             if(&parent1 == &parent2)
-                std::cout <<"error"<<std::endl;
+                continue;
 
             GA.crossOver(parent1, parent2);
         }
 
+        GA.copyNewPopulationToPopulation();
+        GA.evaluateAllChoromosoms();
         Choromosome best = GA.getBestChromosome();
         best.printChoromosome();
-        GA.copyNewPopulationToPopulation();
+
+        GA.mutation();
     }
 
-//    Choromosome best = GA.getBestChromosome();
-//    best.printChoromosome();
+    Choromosome best = GA.getBestChromosome();
+    best.printChoromosome();
 
     return 0;
 }

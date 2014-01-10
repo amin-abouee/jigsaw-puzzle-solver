@@ -43,6 +43,8 @@ public:
 
     void setPiecesArrangment (int rowInx, int colInx, int neighbourId);
 
+    void swapTwoPieces(int row1, int col1, int row2, int col2);
+
     double getFitness() const;
 
     int getOccupiedPositions() const;

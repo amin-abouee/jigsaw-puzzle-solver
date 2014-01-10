@@ -82,17 +82,14 @@ void GeneticAlgorithm::evaluateAllChoromosoms()
 
 const Choromosome & GeneticAlgorithm::selectionChromosome()
 {
-    //    roulette wheel selection
-    //    unsigned seed = std::chrono::system_clock::now().time_since_epoch().count();
-    //    std::knuth_b generator(seed);
-    std::uniform_real_distribution <double> distribution(0,totalFitness);
+    std::uniform_real_distribution <double> distribution(0.0,1.0);
     double randomFitness = distribution(generator);
 
     double sum = 0;
     // check -> population sorted here ????
     for(const auto & choromosome : population)
     {
-        sum += choromosome.getFitness();
+        sum += (choromosome.getFitness() / totalFitness);
         if(sum >= randomFitness)
             return choromosome;
     }
@@ -103,9 +100,33 @@ void GeneticAlgorithm::selectElitism(int numElitism)
 {
     assert(numElitism < population.size());
 
-    std::sort(population.begin(), population.end());
     for(int i=0; i<numElitism; i++)
         newPopulation.push_back(population[i]);
+}
+
+void GeneticAlgorithm::mutation()
+{
+    float numMutation = numPieces * 0.05;
+    int populationSize = population.size();
+    std::uniform_int_distribution<int> distrioRow(0,numPiecesRow-1);
+    std::uniform_int_distribution<int> distrioCol(0,numPiecesCol-1);
+
+    for(size_t c =0; c < populationSize; c++)
+    {
+        Choromosome & choromosome = population[c];
+        int numMutationForEachChoro = c * (numMutation / populationSize);
+//        std::cout << "num for choro "<< c <<" :"<< numMutationForEachChoro << "with fitness: "<< choromosome.getFitness() << std::endl;
+        for(int i=0; i<numMutationForEachChoro; i++)
+        {
+            int randomRowInx1 = distrioRow(generator);
+            int randomRowInx2 = distrioRow(generator);
+            int randomColInx1 = distrioCol(generator);
+            int randomColInx2 = distrioCol(generator);
+
+            assert (randomRowInx1 != randomRowInx2 && randomColInx1 != randomColInx2);
+           choromosome.swapTwoPieces(randomRowInx1, randomColInx1, randomRowInx2, randomColInx2);
+        }
+    }
 }
 
 void GeneticAlgorithm::crossOver(const Choromosome &parent1, const Choromosome &parent2)
@@ -144,7 +165,6 @@ void GeneticAlgorithm::crossOver(const Choromosome &parent1, const Choromosome &
         setNeighbourByBestMatch(offSpring, freeBounderiesPositions[randomPieceId]);
         //        std::cout << "bestmatch!!"<<std::endl;
     }
-    //    offSpring.checkChoro();
     newPopulation.push_back(offSpring);
 }
 
@@ -246,6 +266,7 @@ void GeneticAlgorithm::copyNewPopulationToPopulation()
 
 Choromosome GeneticAlgorithm::getBestChromosome()
 {
+    std::sort(population.begin(), population.end());
     return population[0];
 }
 
