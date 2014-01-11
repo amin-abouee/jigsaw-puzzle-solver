@@ -42,7 +42,9 @@ Choromosome::~Choromosome()
 // check
 void Choromosome::generateChoromosome(std::vector <int> & randVec)
 {
-    std::random_shuffle(randVec.begin(), randVec.end());
+    std::random_device rd;
+    std::mt19937_64 generator(rd());
+    std::shuffle(randVec.begin(), randVec.end(),generator);
 
     int inx = 0;
     for(size_t i=0; i< height; i++)
@@ -61,6 +63,24 @@ void Choromosome::swapTwoPieces(int row1, int col1, int row2, int col2)
     int temp = piecesArrangment[row1][col1];
     piecesArrangment[row1][col1] = piecesArrangment[row2][col2];
     piecesArrangment[row2][col2] = temp;
+}
+
+int Choromosome::getRandomAvailabalePiece(int numAvailabale)
+{
+    std::random_device rd;
+    std::mt19937_64 generator(rd());
+    std::uniform_int_distribution<int> distribution(1,numAvailabale);
+    int randInx = distribution(generator);
+
+    int availableSize = availabalePieces.size();
+    int cnt = 0;
+    for(int i=0; i< availableSize; i++)
+        if (availabalePieces[i] == true)
+        {
+            cnt++;
+            if(cnt == randInx)
+                return i;
+        }
 }
 
 void Choromosome::getFreeBoundries(std::vector <SpatialRelation> & freeBounderiesPositions)
@@ -213,7 +233,7 @@ void Choromosome::assignPiece(SpatialRelation currentBoundary, int neighbourId)
 
 void Choromosome::setPiecesArrangment(int rowInx, int colInx, int neighbourId)
 {
-//    std::cout << "row: "<< rowInx <<" col: "<< colInx << " id: " << neighbourId << std::endl;
+    //    std::cout << "row: "<< rowInx <<" col: "<< colInx << " id: " << neighbourId << std::endl;
     piecesArrangment[rowInx][colInx] = neighbourId;
     occupiedPosition ++;
     assert(availabalePieces[neighbourId] == true);

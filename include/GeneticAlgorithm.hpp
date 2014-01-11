@@ -24,7 +24,9 @@ public:
 
     void crossOver(const Choromosome & parent1, const Choromosome & parent2);
 
-    void mutation();
+    void mutation(Choromosome & offSpring,
+                  int numAvailable,
+                  const SpatialRelation &currentBoundary);
 
     cv::Mat splitImage(int rowPiece, int colPiece) const ;
 
@@ -84,10 +86,9 @@ private:
 
     int numPiecesCol;
 
-    std::random_device rd;
-
     std::mt19937_64 generator;
 
+    std::random_device randomSeed;
 };
 
 #endif /* GENETICALGORITHM_HPP */

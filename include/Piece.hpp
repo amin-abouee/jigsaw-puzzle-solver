@@ -32,6 +32,8 @@ public:
 
     bool isBestBuddy(const Piece & neighbour, SpatialRelation::Direction direction) const;
 
+    int checkPiece();
+
 private:
 
     int id;
@@ -48,10 +50,10 @@ private:
     std::map <int, double> upDissimiliratyValues;
 
 
-    int bestBuddyRightId;
-    int bestBuddyDownId;
-    int bestBuddyUpId;
-    int bestBuddyLeftId;
+    std::vector <int> bestBuddyRightId;
+    std::vector <int> bestBuddyDownId;
+    std::vector <int> bestBuddyUpId;
+    std::vector <int> bestBuddyLeftId;
 };
 
 #endif /* PIECE_HPP */

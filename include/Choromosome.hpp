@@ -45,6 +45,8 @@ public:
 
     void swapTwoPieces(int row1, int col1, int row2, int col2);
 
+    int getRandomAvailabalePiece (int numAvailabale);
+
     double getFitness() const;
 
     int getOccupiedPositions() const;

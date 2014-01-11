@@ -9,8 +9,6 @@ Piece::Piece(int id, cv::Mat patchImage):patchImage(patchImage)
 
     //TODO: clear SortedDissimilarity and MAP
     this->id = id;
-    this->bestBuddyRightId = -1;
-    this->bestBuddyDownId = -1;
 }
 
 Piece::~Piece()
@@ -90,25 +88,56 @@ void Piece::sortDissimilarityValues()
 
 void Piece::setBestBuddies()
 {
-    bestBuddyRightId = sortedRightDissimiliratyValues[0].first;
-    bestBuddyDownId = sortedDownDissimiliratyValues[0].first;
-    bestBuddyUpId = sortedUpDissimiliratyValues[0].first;
-    bestBuddyLeftId = sortedLeftDissimiliratyValues[0].first;
+    const int numberOfBestBuddy = 3;
+    for(size_t i=0; i<numberOfBestBuddy; i++)
+    {
+        bestBuddyRightId.push_back(sortedRightDissimiliratyValues[i].first);
+        bestBuddyDownId.push_back(sortedDownDissimiliratyValues[i].first);
+        bestBuddyUpId.push_back(sortedUpDissimiliratyValues[i].first);
+        bestBuddyLeftId.push_back(sortedLeftDissimiliratyValues[i].first);
+    }
 }
 
 bool Piece::isBestBuddy (const Piece & neighbour, SpatialRelation::Direction direction) const
 {
+    int bestBuddySize = bestBuddyUpId.size();
     if(direction == SpatialRelation::Up)
-        return (this->bestBuddyUpId == neighbour.id && neighbour.bestBuddyDownId == this->id);
+    {
+        for(int i=0; i<bestBuddySize; i++)
+            if(this->bestBuddyUpId[i] == neighbour.id && neighbour.bestBuddyDownId[0] == this->id)
+                return true;
+
+        return false;
+    }
 
     if(direction == SpatialRelation::Left)
-        return (this->bestBuddyLeftId == neighbour.id && neighbour.bestBuddyRightId == this->id);
+    {
+        for(int i=0; i<bestBuddySize; i++)
+            if(this->bestBuddyLeftId[i] == neighbour.id && neighbour.bestBuddyRightId[0] == this->id)
+                return true;
+
+        return false;
+    }
 
     if(direction == SpatialRelation::Down)
-        return (this->bestBuddyDownId == neighbour.id && neighbour.bestBuddyUpId == this->id);
+    {
+        for(int i=0; i<bestBuddySize; i++)
+            if(this->bestBuddyDownId[i] == neighbour.id && neighbour.bestBuddyUpId[0] == this->id)
+                return true;
+
+        return false;
+    }
 
     if(direction == SpatialRelation::Right)
-        return (this->bestBuddyRightId == neighbour.id && neighbour.bestBuddyLeftId == this->id);
+    {
+        for(int i=0; i<bestBuddySize; i++)
+            if(this->bestBuddyRightId[i] == neighbour.id && neighbour.bestBuddyLeftId[0] == this->id)
+                return true;
+
+        return false;
+    }
+
+    //        return (this->bestBuddyRightId == neighbour.id && neighbour.bestBuddyLeftId == this->id);
 }
 
 int Piece::getBestMatch(std::vector<bool> & pieceAvailability, SpatialRelation::Direction direction) const
@@ -153,4 +182,9 @@ int Piece::getBestMatch(std::vector<bool> & pieceAvailability, SpatialRelation::
         }
     }
 
+}
+
+int Piece::checkPiece()
+{
+    return this->bestBuddyUpId.size();
 }

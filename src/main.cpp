@@ -7,16 +7,16 @@ int main(int argc, char* argv[])
 {
     static_assert(__cplusplus > 199711L, "Program requires C++11 capable compiler");
     cv::Mat image = cv::imread(argv[1], cv::IMREAD_COLOR);
-    //cvtColor(image, image, CV_BGR2Lab);
+//    cvtColor(image, image, CV_BGR2Lab);
 
     int patchSize = atoi(argv[2]);
 
     GeneticAlgorithm GA(image, patchSize);
 
     // change
-    const int numPopulation = 100;
+    const int numPopulation = 200;
     const int numGeneration = 100;
-    const int numElitism = 4;
+    const int numElitism = 10;
     const int numCrossOverOperation = numPopulation - numElitism;
 
     GA.generatePopulation(numPopulation);
@@ -29,11 +29,12 @@ int main(int argc, char* argv[])
     {
         std::cout << "generation: " << i+1 << std::endl;
         GA.evaluateAllChoromosoms();
+        Choromosome best = GA.getBestChromosome();
+        best.printChoromosome();
         GA.selectElitism(numElitism);
 
         for(int j=0; j<numCrossOverOperation; j++)
         {
-            std::cout << "cross: " << j << std::endl;
             const Choromosome & parent1 = GA.selectionChromosome();
             const Choromosome & parent2 = GA.selectionChromosome();
 
@@ -44,13 +45,9 @@ int main(int argc, char* argv[])
         }
 
         GA.copyNewPopulationToPopulation();
-        GA.evaluateAllChoromosoms();
-        Choromosome best = GA.getBestChromosome();
-        best.printChoromosome();
-
-        GA.mutation();
     }
 
+    GA.evaluateAllChoromosoms();
     Choromosome best = GA.getBestChromosome();
     best.printChoromosome();
 

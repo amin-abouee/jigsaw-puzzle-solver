@@ -15,7 +15,6 @@ GeneticAlgorithm::GeneticAlgorithm(cv::Mat image, int size):image(image), patchS
     numPieces = (image.rows / size) * (image.cols / size);
     totalFitness = 0;
     pieces.reserve(numPieces);
-    generator.seed(rd());
 }
 
 GeneticAlgorithm::~GeneticAlgorithm()
@@ -67,6 +66,8 @@ void GeneticAlgorithm::initiatePieces()
         piece.sortDissimilarityValues();
         piece.setBestBuddies();
     }
+
+    //    assert (pieces[0].checkPiece() == true);
 }
 
 void GeneticAlgorithm::evaluateAllChoromosoms()
@@ -78,10 +79,15 @@ void GeneticAlgorithm::evaluateAllChoromosoms()
         choromosome.calculateFitness(pieces);
         totalFitness += choromosome.getFitness();
     }
+
+    //
+    //    assert (pieces[0].checkPiece() == true);
 }
 
 const Choromosome & GeneticAlgorithm::selectionChromosome()
 {
+
+    generator.seed(randomSeed());
     std::uniform_real_distribution <double> distribution(0.0,1.0);
     double randomFitness = distribution(generator);
 
@@ -102,49 +108,45 @@ void GeneticAlgorithm::selectElitism(int numElitism)
 
     for(int i=0; i<numElitism; i++)
         newPopulation.push_back(population[i]);
+
+    //
+    //    assert (pieces[0].checkPiece() == true);
 }
 
-void GeneticAlgorithm::mutation()
+void GeneticAlgorithm::mutation(Choromosome &offSpring, int numAvailable, const SpatialRelation &currentBoundary)
 {
-    float numMutation = numPieces * 0.05;
-    int populationSize = population.size();
-    std::uniform_int_distribution<int> distrioRow(0,numPiecesRow-1);
-    std::uniform_int_distribution<int> distrioCol(0,numPiecesCol-1);
-
-    for(size_t c =0; c < populationSize; c++)
-    {
-        Choromosome & choromosome = population[c];
-        int numMutationForEachChoro = c * (numMutation / populationSize);
-//        std::cout << "num for choro "<< c <<" :"<< numMutationForEachChoro << "with fitness: "<< choromosome.getFitness() << std::endl;
-        for(int i=0; i<numMutationForEachChoro; i++)
-        {
-            int randomRowInx1 = distrioRow(generator);
-            int randomRowInx2 = distrioRow(generator);
-            int randomColInx1 = distrioCol(generator);
-            int randomColInx2 = distrioCol(generator);
-
-            assert (randomRowInx1 != randomRowInx2 && randomColInx1 != randomColInx2);
-           choromosome.swapTwoPieces(randomRowInx1, randomColInx1, randomRowInx2, randomColInx2);
-        }
-    }
+    int randInx = offSpring.getRandomAvailabalePiece(numAvailable);
+    offSpring.assignPiece(currentBoundary, randInx);
 }
 
 void GeneticAlgorithm::crossOver(const Choromosome &parent1, const Choromosome &parent2)
 {
+    generator.seed(randomSeed());
     std::uniform_int_distribution<int> distribution(0,numPieces-1);
     int seedInx = distribution(generator);
 
     Choromosome offSpring(numPiecesCol, numPiecesRow);
-    // TODO assignPiece for one sample;
     offSpring.assignPiece(numPiecesRow/2, numPiecesCol/2, seedInx);
+    //    int numMutation = numPieces * 0.05;
 
-    while(offSpring.getOccupiedPositions() < numPieces)
+    for(int i=0; i<numPieces-1; i++)
     {
         std::vector <SpatialRelation> freeBounderiesPositions;
 
         offSpring.getFreeBoundries(freeBounderiesPositions);
-        //
 
+        generator.seed(randomSeed());
+        std::uniform_int_distribution<int> distribution1(0,freeBounderiesPositions.size()-1);
+        int randomPieceId  = distribution1(generator);
+
+        // hardcode
+        //        if((i+1) % 50 == 0)
+        //        {
+        //            mutation(offSpring, (numPieces-i-1), freeBounderiesPositions[randomPieceId]);
+        //            continue;
+        //        }
+
+        //        assert (pieces[0].checkPiece() == true);
         bool resultParent = setNeighbourByParents(offSpring, parent1, parent2, freeBounderiesPositions);
         if(resultParent)
         {
@@ -152,6 +154,7 @@ void GeneticAlgorithm::crossOver(const Choromosome &parent1, const Choromosome &
             continue;
         }
 
+        //        assert (pieces[0].checkPiece() == true);
         bool resultBesBuddy = setNeighbourByBestBuddy(offSpring, parent1, parent2, freeBounderiesPositions);
         if(resultBesBuddy)
         {
@@ -159,12 +162,11 @@ void GeneticAlgorithm::crossOver(const Choromosome &parent1, const Choromosome &
             continue;
         }
 
-        std::uniform_int_distribution<int> distribution1(0,freeBounderiesPositions.size()-1);
-        int randomPieceId  = distribution1(generator);
-
+        //        assert (pieces[0].checkPiece() == true);
         setNeighbourByBestMatch(offSpring, freeBounderiesPositions[randomPieceId]);
         //        std::cout << "bestmatch!!"<<std::endl;
     }
+    //    offSpring.checkChoro();
     newPopulation.push_back(offSpring);
 }
 
@@ -219,12 +221,12 @@ int GeneticAlgorithm::findNeighbourByBestBuddy(const Choromosome &parent1,
 
     int currentPieceId = currentBoundary.pieceIndex;
 
-    if (pieces[currentPieceId].isBestBuddy(pieces[neighbourParent1], currentBoundary.direction))
+    if ( neighbourParent1!= -1 && pieces[currentPieceId].isBestBuddy(pieces[neighbourParent1], currentBoundary.direction))
     {
         return neighbourParent1;
     }
 
-    else if (pieces[currentPieceId].isBestBuddy(pieces[neighbourParent2], currentBoundary.direction))
+    else if (neighbourParent2 != -1 && pieces[currentPieceId].isBestBuddy(pieces[neighbourParent2], currentBoundary.direction))
     {
         return neighbourParent2;
     }
