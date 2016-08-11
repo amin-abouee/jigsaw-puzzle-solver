@@ -1,6 +1,5 @@
 #include "SpatialRelation.hpp"
 
-
 SpatialRelation::SpatialRelation(Direction direction, int pieceIndex, int choroRowInx, int choroColInx)
 {
     this->direction = direction;
@@ -15,7 +14,4 @@ SpatialRelation::SpatialRelation(Direction direction, int pieceIndex)
     this->pieceIndex = pieceIndex;
 }
 
-SpatialRelation::~SpatialRelation()
-{
-
-}
+SpatialRelation::~SpatialRelation() {}
