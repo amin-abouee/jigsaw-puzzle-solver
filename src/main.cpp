@@ -1,13 +1,12 @@
 #include <opencv2/opencv.hpp>
-#include "GeneticAlgorithm.hpp"
 #include "Choromosome.hpp"
-
+#include "GeneticAlgorithm.hpp"
 
 int main(int argc, char* argv[])
 {
     static_assert(__cplusplus > 199711L, "Program requires C++11 capable compiler");
     cv::Mat image = cv::imread(argv[1], cv::IMREAD_COLOR);
-//    cvtColor(image, image, CV_BGR2Lab);
+    //    cvtColor(image, image, CV_BGR2Lab);
 
     int patchSize = atoi(argv[2]);
 
@@ -25,20 +24,20 @@ int main(int argc, char* argv[])
     GA.generatePieces();
     GA.initiatePieces();
 
-    for(int i=0; i<numGeneration; i++)
+    for (int i = 0; i < numGeneration; i++)
     {
-        std::cout << "generation: " << i+1 << std::endl;
+        std::cout << "generation: " << i + 1 << std::endl;
         GA.evaluateAllChoromosoms();
         Choromosome best = GA.getBestChromosome();
         best.printChoromosome();
         GA.selectElitism(numElitism);
 
-        for(int j=0; j<numCrossOverOperation; j++)
+        for (int j = 0; j < numCrossOverOperation; j++)
         {
-            const Choromosome & parent1 = GA.selectionChromosome();
-            const Choromosome & parent2 = GA.selectionChromosome();
+            const Choromosome& parent1 = GA.selectionChromosome();
+            const Choromosome& parent2 = GA.selectionChromosome();
 
-            if(&parent1 == &parent2)
+            if (&parent1 == &parent2)
                 continue;
 
             GA.crossOver(parent1, parent2);
